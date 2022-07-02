@@ -1,7 +1,11 @@
 import express from 'express';
+import Orders from '../services/orders';
+import { CONFLICT, MISSING_DATA, NOT_FOUND } from '../constants/error';
 
 const { Router } = express;
 const router = Router();
+
+const orders = new Orders();
 
 router.get('/', (req, res) => {
   res.json({
@@ -10,56 +14,96 @@ router.get('/', (req, res) => {
   });
 });
 
-router.get('/', (req, res) => {
-  res.json({
-    availableMethods: ['GET /:id', 'POST /:id', 'PUT', 'DELETE /:id'],
-  });
-});
-
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   console.log(`GET ORDER ${req.params.id}`);
 
-  res.json({
-    _id: '1',
-    date: new Date(),
-    location: 2,
-    paidIn: 'cash',
-    staffId: '1',
-    products: [
-      {
-        productId: '2',
-        name: 'Mocha',
-        amount: 2,
-        unitPrice: 2.0,
-        total: 4.0,
-      },
-    ],
-    total: 4.0,
-  });
+  try {
+    const orderData = await orders.getOrders(req.params.id);
+    return res.json({
+      orders: orderData,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      error: 'Generic server error',
+      message: err.message,
+    });
+  }
 });
 
-router.post('/:id', (req, res) => {
+router.post('/:id', async (req, res) => {
   console.log('POST ORDER', req.body);
 
-  res.json({
-    ok: true,
-  });
+  try {
+    await orders.addOrder({ _id: req.params.id, ...req.body });
+    return res.json({
+      ok: true,
+    });
+  } catch (err) {
+    switch (err.message) {
+      case MISSING_DATA:
+        return res.status(400).json({
+          error: 'Missing input parameters',
+        });
+      case CONFLICT:
+        return res.status(409).json({
+          error: 'Order already exists',
+        });
+      default:
+        return res.status(500).json({
+          error: 'Generic server error',
+          message: err.message,
+        });
+    }
+  }
 });
 
-router.put('/:id?', (req, res) => {
+router.put('/:id?', async (req, res) => {
   console.log(`PUT ORDER ${req.params.id}`, req.body);
 
-  res.json({
-    ok: true,
-  });
+  try {
+    await orders.updateOrder(req.params.id, req.body);
+    return res.json({
+      ok: true,
+    });
+  } catch (err) {
+    switch (err.message) {
+      case MISSING_DATA:
+        return res.status(400).json({
+          error: 'Missing input data',
+        });
+      case NOT_FOUND:
+        return res.status(404).json({
+          error: 'Order not found',
+        });
+      default:
+        return res.status(500).json({
+          error: 'Generic server error',
+          message: err.message,
+        });
+    }
+  }
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   console.log(`DELETE ORDER ${req.params.id}`);
 
-  res.json({
-    ok: true,
-  });
+  try {
+    await orders.deleteOrder(req.params.id);
+    return res.json({
+      ok: true,
+    });
+  } catch (err) {
+    if (err.message === NOT_FOUND) {
+      return res.status(404).json({
+        error: 'Order not found',
+      });
+    }
+
+    return res.status(500).json({
+      error: 'Generic server error',
+      message: err.message,
+    });
+  }
 });
 
 export default router;
