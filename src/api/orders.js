@@ -1,6 +1,6 @@
 import express from 'express';
 import Orders from '../services/orders';
-import { CONFLICT, MISSING_DATA, NOT_FOUND } from '../constants/error';
+import errorResponse from '../utils/errorResponse';
 
 const { Router } = express;
 const router = Router();
@@ -39,21 +39,7 @@ router.post('/:id', async (req, res) => {
       ok: true,
     });
   } catch (err) {
-    switch (err.message) {
-      case MISSING_DATA:
-        return res.status(400).json({
-          error: 'Missing input parameters',
-        });
-      case CONFLICT:
-        return res.status(409).json({
-          error: 'Order already exists',
-        });
-      default:
-        return res.status(500).json({
-          error: 'Generic server error',
-          message: err.message,
-        });
-    }
+    return errorResponse(err, res);
   }
 });
 
@@ -66,21 +52,7 @@ router.put('/:id?', async (req, res) => {
       ok: true,
     });
   } catch (err) {
-    switch (err.message) {
-      case MISSING_DATA:
-        return res.status(400).json({
-          error: 'Missing input data',
-        });
-      case NOT_FOUND:
-        return res.status(404).json({
-          error: 'Order not found',
-        });
-      default:
-        return res.status(500).json({
-          error: 'Generic server error',
-          message: err.message,
-        });
-    }
+    return errorResponse(err, res);
   }
 });
 
@@ -93,16 +65,7 @@ router.delete('/:id', async (req, res) => {
       ok: true,
     });
   } catch (err) {
-    if (err.message === NOT_FOUND) {
-      return res.status(404).json({
-        error: 'Order not found',
-      });
-    }
-
-    return res.status(500).json({
-      error: 'Generic server error',
-      message: err.message,
-    });
+    return errorResponse(err, res);
   }
 });
 
