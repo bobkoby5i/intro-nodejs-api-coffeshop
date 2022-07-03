@@ -6,8 +6,17 @@ import {
   VALIDATION_ERROR,
 } from '../constants/error';
 import { idSchema } from '../constants/validation';
+import {
+  addProduct,
+  deleteProduct,
+  getProduct,
+  getProducts,
+  updateProduct,
+} from '../db/products';
 
 export default class Products {
+  idSchema = idSchema;
+
   defaultProduct = {
     _id: '123123123123123123123123',
     name: 'Mocha',
@@ -21,7 +30,7 @@ export default class Products {
   };
 
   productUpdateSchema = Joi.object().keys({
-    _id: idSchema.required(),
+    _id: this.idSchema.required(),
     name: Joi.string(),
     brand: Joi.string(),
     available: Joi.number(),
@@ -40,6 +49,10 @@ export default class Products {
 
   productSchema = this.productUpdateSchema.options({ presence: 'required' });
 
+  addProductSchema = this.productSchema.keys({
+    _id: Joi.any().strip().optional(),
+  });
+
   async addProduct(productData) {
     if (!productData) {
       throw new Error(MISSING_DATA);
@@ -50,43 +63,71 @@ export default class Products {
     }
 
     try {
-      await this.productSchema.validateAsync(productData);
+      await this.addProductSchema.validateAsync(productData);
     } catch (err) {
       const error = new Error(VALIDATION_ERROR);
       error.reason = err.message;
       throw error;
     }
 
-    return true;
+    return addProduct(productData);
   }
 
   async deleteProduct(productId) {
-    if (this.defaultProduct._id === productId) {
-      console.log(`Deleting ${productId}`);
-      return true;
+    try {
+      await this.idSchema.validateAsync(productId);
+    } catch (err) {
+      const error = new Error(VALIDATION_ERROR);
+      error.reason = err.message;
+      throw error;
     }
 
-    throw new Error(NOT_FOUND);
+    const deletedCount = await deleteProduct(productId);
+    if (deletedCount === 0) {
+      throw new Error(NOT_FOUND);
+    }
+    return true;
   }
 
-  async getProducts(productId, onlyAvailable = false) {
-    console.log(`Get products`, productId, onlyAvailable);
-    if (!productId) {
-      return this.defaultProduct;
+  async getProduct(productId) {
+    try {
+      await this.idSchema.validateAsync(productId);
+    } catch (err) {
+      const error = new Error(VALIDATION_ERROR);
+      error.reason = err.message;
+      throw error;
     }
 
-    return onlyAvailable ? [] : [this.defaultProduct];
+    console.log(`Get product`, productId);
+    const product = await getProduct(productId);
+    if (!product) {
+      throw new Error(NOT_FOUND);
+    }
+    return getProduct(productId);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  async getProducts(productIds, additionalParams) {
+    console.log(`Get products:`, productIds, additionalParams);
+    return getProducts(productIds, additionalParams);
   }
 
   async updateProduct(productId, productData) {
-    if (!productId || !productData) {
+    try {
+      await this.idSchema.validateAsync(productId);
+    } catch (err) {
+      const error = new Error(VALIDATION_ERROR);
+      error.reason = err.message;
+      throw error;
+    }
+
+    // Throw when there is nothing to update
+    if (!productData || Object.keys(productData).length <= 1) {
       throw new Error(MISSING_DATA);
     }
 
-    if (this.defaultProduct._id !== productId) {
-      throw new Error(NOT_FOUND);
-    }
-
+    // eslint-disable-next-line no-param-reassign
+    productData._id = productId;
     try {
       await this.productUpdateSchema.validateAsync(productData);
     } catch (err) {
@@ -96,6 +137,6 @@ export default class Products {
     }
 
     console.log(`Saving ${productId}`, productData);
-    return true;
+    return updateProduct(productData);
   }
 }

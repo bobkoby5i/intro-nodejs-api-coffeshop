@@ -19,43 +19,66 @@ const products = new Products();
 //   categories: ['coffee'],
 // };
 
-router.get('/', (req, res) => {
-  res.json({
-    hello: 'Hello from products',
-    availableMethods: [
-      'GET /:id',
-      'POST /:id',
-      'PUT',
-      'DELETE /:id',
-      'GET /availableProducts',
-    ],
-  });
-});
-
-router.get('/:id?', async (req, res) => {
-  console.log(`GET PRODUCTS ${req.params.id}`);
-
+router.get('/', async (req, res) => {
   try {
-    const productData = await products.getProducts(
-      req.params.id,
-      req.query.onlyAvailable
-    );
+    const productData = await products.getProducts({
+      amountAtLeast: req.query.amountAtLeast,
+      brand: req.query.brand,
+      categories: req.query.categories,
+      page: req.query.page,
+    });
 
     return res.json({
       products: productData,
     });
+  } catch (err) {
+    return res.status(500).json({
+      error: 'Generic server error',
+      message: err.message,
+    });
+  }
+});
+
+router.get('/all', async (req, res) => {
+  try {
+    const productData = await products.getProducts('all', {
+      amountAtLeast: req.query.amountAtLeast,
+      brand: req.query.brand,
+      categories: req.query.categories,
+      page: req.query.page,
+    });
+
+    return res.json({
+      products: productData,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      error: 'Generic server error',
+      message: err.message,
+    });
+  }
+});
+
+router.get('/:id?', async (req, res) => {
+  console.log(`GET PRODUCT ${req.params.id}`);
+
+  try {
+    const productData = await products.getProduct(req.params.id);
+
+    return res.json(productData);
   } catch (err) {
     return errorResponse(err, res);
   }
 });
 
 router.post('/:id', async (req, res) => {
+  const product = { ...req.body };
   console.log('POST PRODUCTS', req.body);
 
   try {
-    await products.addProduct({ _id: req.params.id, ...req.body });
-    return res.json({
-      ok: true,
+    const productId = await products.addProduct(product);
+    return res.status(201).json({
+      id: productId,
     });
   } catch (err) {
     return errorResponse(err, res);
@@ -66,9 +89,9 @@ router.put('/:id', async (req, res) => {
   console.log(`PUT PRODUCTS ${req.params.id}`, req.body);
 
   try {
-    await products.updateProduct(req.params.id, req.body);
-    return res.json({
-      ok: true,
+    const updatedCount = await products.updateProduct(req.params.id, req.body);
+    return res.status(200).json({
+      updated: updatedCount,
     });
   } catch (err) {
     return errorResponse(err, res);

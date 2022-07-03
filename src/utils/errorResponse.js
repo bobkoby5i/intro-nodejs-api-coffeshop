@@ -3,6 +3,7 @@ import {
   MISSING_DATA,
   NOT_FOUND,
   VALIDATION_ERROR,
+  PEER_ERROR,
 } from '../constants/error';
 
 export default (err, res) => {
@@ -19,11 +20,16 @@ export default (err, res) => {
       });
     case NOT_FOUND:
       return res.status(404).json({
-        error: 'Order not found',
+        error: 'Entity not found',
       });
     case CONFLICT:
       return res.status(409).json({
         error: 'Resource already exists',
+      });
+    case PEER_ERROR:
+      return res.status(409).json({
+        error: 'Peer resource does not exist',
+        message: err.reason,
       });
     default:
       return res.status(500).json({

@@ -10,6 +10,7 @@ import cors from 'cors';
 // const debugApp = debug('app');
 
 import { APP_PORT } from './config/app';
+import { connectToDB } from './db';
 import api from './api';
 
 (async function runApp() {
@@ -21,6 +22,9 @@ import api from './api';
   // app.use(express.json({extended: false})); // tu use with json
   // app.use(express.urlencoded({ extended: true })); // to use with x-www-form-urlencoded.
   console.log('Hello World!');
+
+  // Connect to the database
+  await connectToDB();
 
   // Add routing
   app.use(api);

@@ -15,7 +15,7 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-  console.log(`GET STAFF ${req.params.id}`);
+  console.log(`GET STAFF ${req.params.id}`, req.query);
 
   // res.json({
   //   _id: '1',
@@ -27,7 +27,12 @@ router.get('/:id', async (req, res) => {
   //   monthlySalary: 4000.0,
   // });
   try {
-    const employeeData = await staff.getEmployee(req.params.id);
+    const employeeData = await staff.getEmployees(req.params.id, {
+      ratingAbove: req.query.ratingAbove,
+      ratingBelow: req.query.ratingBelow,
+      page: req.query.page,
+      position: req.query.position,
+    });
 
     return res.json({
       employees: employeeData,
@@ -37,13 +42,14 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/:id', async (req, res) => {
-  console.log('POST STAFF', req.body);
+router.post('', async (req, res) => {
+  const employee = { _id: req.params.id, ...req.body };
+  console.log(`POST STAFF`, employee);
 
   try {
-    await staff.addEmployee({ _id: req.params.id, ...req.body });
+    const employeeId = await staff.addEmployee(employee);
     return res.json({
-      ok: true,
+      id: employeeId,
     });
   } catch (err) {
     return errorResponse(err, res);
@@ -52,11 +58,12 @@ router.post('/:id', async (req, res) => {
 
 router.put('/:id?', async (req, res) => {
   console.log(`PUT STAFF ${req.params.id}`, req.body);
+  const employee = req.body;
 
   try {
-    await staff.updateEmployee(req.params.id, req.body);
+    const updatedCount = await staff.updateEmployee(req.params.id, employee);
     return res.json({
-      ok: true,
+      updated: updatedCount,
     });
   } catch (err) {
     return errorResponse(err, res);

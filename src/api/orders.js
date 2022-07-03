@@ -15,28 +15,31 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-  console.log(`GET ORDER ${req.params.id}`);
+  console.log(`GET ORDERS ${req.params.id}`, req.query);
 
   try {
-    const orderData = await orders.getOrders(req.params.id);
+    const orderData = await orders.getOrders(req.params.id, {
+      dateFrom: req.query.dateFrom,
+      dateTo: req.query.dateTo,
+      page: req.query.page,
+    });
+
     return res.json({
       orders: orderData,
     });
   } catch (err) {
-    return res.status(500).json({
-      error: 'Generic server error',
-      message: err.message,
-    });
+    return errorResponse(err, res);
   }
 });
 
-router.post('/:id', async (req, res) => {
+router.post('', async (req, res) => {
   console.log('POST ORDER', req.body);
+  const order = req.body;
 
   try {
-    await orders.addOrder({ _id: req.params.id, ...req.body });
+    const orderId = await orders.addOrder(order);
     return res.json({
-      ok: true,
+      id: orderId,
     });
   } catch (err) {
     return errorResponse(err, res);
@@ -45,11 +48,13 @@ router.post('/:id', async (req, res) => {
 
 router.put('/:id?', async (req, res) => {
   console.log(`PUT ORDER ${req.params.id}`, req.body);
+  const order = req.body;
+  console.log(`POST ORDER`, req.params.id, order);
 
   try {
-    await orders.updateOrder(req.params.id, req.body);
+    const updatedCount = await orders.updateOrder(req.params.id, order);
     return res.json({
-      ok: true,
+      updated: updatedCount,
     });
   } catch (err) {
     return errorResponse(err, res);
