@@ -1,0 +1,5 @@
+exercises:
+    01_Aplikacja: { max_points: 0, disabled: true }
+    02_Serwisy: { max_points: 0, disabled: true }
+    03_Walidacje: { max_points: 0, disabled: true }
+    '04_Baza danych': { max_points: 0, disabled: true }
