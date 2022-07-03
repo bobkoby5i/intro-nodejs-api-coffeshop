@@ -20,23 +20,10 @@ const products = new Products();
 // };
 
 router.get('/', async (req, res) => {
-  try {
-    const productData = await products.getProducts({
-      amountAtLeast: req.query.amountAtLeast,
-      brand: req.query.brand,
-      categories: req.query.categories,
-      page: req.query.page,
-    });
-
-    return res.json({
-      products: productData,
-    });
-  } catch (err) {
-    return res.status(500).json({
-      error: 'Generic server error',
-      message: err.message,
-    });
-  }
+  res.json({
+    hello: 'Hello from products',
+    availableMethods: ['GET /:id', 'POST ', 'PUT /:id', 'DELETE /:id'],
+  });
 });
 
 router.get('/all', async (req, res) => {

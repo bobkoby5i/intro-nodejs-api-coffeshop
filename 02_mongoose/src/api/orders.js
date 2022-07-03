@@ -33,7 +33,7 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('', async (req, res) => {
-  console.log('POST ORDER', req.body);
+  // console.log('POST ORDER', req.body);
   const order = req.body;
 
   try {

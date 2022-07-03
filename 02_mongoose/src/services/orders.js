@@ -6,63 +6,12 @@ import {
   PEER_ERROR,
   VALIDATION_ERROR,
 } from '../constants/error';
-import { addOrder, deleteOrder, getOrders, updateOrder } from '../db/orders';
-import { getEmployees } from '../db/staff';
-import { getProducts } from '../db/products';
+import { OrderModel, addOrder, deleteOrder, getOrders, updateOrder } from '../models/orders';
+import { getEmployees } from '../models/staff';
+import { getProducts } from '../models/products';
 
-import { EmployeeModel } from './staff';
-import { ProductModel } from './products';
 
-const mOrderSchema = new mongoose.Schema({
-  date: {
-    required: true,
-    type: Date,
-  },
-  location: {
-    required: true,
-    type: String,
-  },
-  paidIn: {
-    required: true,
-    type: String,
-    enum: ['cash', 'card'],
-  },
-  staffId: {
-    required: true,
-    type: mongoose.Schema.ObjectId,
-    ref: EmployeeModel,
-  },
-  products: [
-    {
-      productId: {
-        required: true,
-        type: mongoose.Schema.ObjectId,
-        ref: ProductModel,
-      },
-      name: {
-        required: true,
-        type: String,
-      },
-      amount: {
-        required: true,
-        type: Number,
-      },
-      unitPrice: {
-        required: true,
-        type: Number,
-      },
-    },
-  ],
-  total: {
-    required: true,
-    type: Number,
-    min: 0.01,
-  },
-});
 
-export const mOrder = mongoose.model('Order', mOrderSchema);
-
-// const { ObjectID } = MongoDB;
 
 export default class Orders {
   // defaultOrder = {
@@ -83,7 +32,7 @@ export default class Orders {
   //   total: 4.0,
   // };
 
-  Order = mongoose.model('Order', mOrderSchema);
+  Order = OrderModel;
 
   static async _checkIfEmployeeExists(employeeId) {
     const existingEmployee = await getEmployees(employeeId);

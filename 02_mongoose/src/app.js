@@ -10,7 +10,7 @@ import cors from 'cors';
 // const debugApp = debug('app');
 
 import { APP_PORT } from './config/app';
-import { connectToDB } from './db';
+import { connectToDB, connectToMongoose } from './models';
 import api from './api';
 
 (async function runApp() {
@@ -25,6 +25,7 @@ import api from './api';
 
   // Connect to the database
   await connectToDB();
+  await connectToMongoose();
 
   // Add routing
   app.use(api);
